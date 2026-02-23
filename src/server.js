@@ -1,9 +1,16 @@
+const path = require("path");
 const express = require("express");
 const dotenv = require("dotenv");
 const connectDB = require("./db");
 const cors = require("cors");
 
-dotenv.config();
+// Always resolve .env from backend root regardless of where server is started from
+dotenv.config({ path: path.resolve(__dirname, "../", ".env") });
+
+// Warn early if critical env vars are missing
+if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+  console.warn("⚠️  WARNING: RAZORPAY_KEY_ID or RAZORPAY_KEY_SECRET is not set in .env!");
+}
 
 const app = express();
 

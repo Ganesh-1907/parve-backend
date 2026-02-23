@@ -1,21 +1,20 @@
 const nodemailer = require("nodemailer");
 
-// Create transporter
-const createTransporter = () => {
-  return nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT),
-    secure: process.env.SMTP_SECURE === "true",
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASSWORD,
-    },
-  });
-};
+// Create transporter ONCE (singleton) — avoids reconnecting SMTP on every email
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: parseInt(process.env.SMTP_PORT),
+  secure: process.env.SMTP_SECURE === "true",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASSWORD,
+  },
+  pool: true,        // reuse connections
+  maxConnections: 5, // allow up to 5 parallel sends
+});
 
 // Send order confirmation to customer
 const sendOrderConfirmation = async (order, user) => {
-  const transporter = createTransporter();
 
   const itemsList = order.items
     .map(
@@ -112,7 +111,6 @@ const sendOrderConfirmation = async (order, user) => {
 
 // Send order notification to admin
 const sendAdminNotification = async (order, user) => {
-  const transporter = createTransporter();
   const adminEmail = process.env.ADMIN_EMAIL || process.env.EMAIL_USER;
 
   const itemsList = order.items

@@ -67,7 +67,6 @@ exports.addToCart = async (req, res) => {
 
     const user = await User.findById(req.user.userId);
 
-    // Check if product already in cart
     const existingItem = user.cart.find(
       (item) => item.productId.toString() === productId
     );
@@ -78,17 +77,14 @@ exports.addToCart = async (req, res) => {
       user.cart.push({ productId, quantity });
     }
 
+    // Save and populate in one step
     await user.save();
+    await user.populate("cart.productId");
 
-    // Return updated cart
-    const updatedUser = await User.findById(req.user.userId).populate("cart.productId");
-    const cartItems = updatedUser.cart
+    const cartItems = user.cart
       .filter((item) => item.productId && item.productId.isActive)
       .map((item) => ({
-        product: {
-          ...item.productId._doc,
-          finalPrice: calculateDiscountedPrice(item.productId),
-        },
+        product: { ...item.productId._doc, finalPrice: calculateDiscountedPrice(item.productId) },
         quantity: item.quantity,
       }));
 
@@ -121,16 +117,12 @@ exports.updateCartItem = async (req, res) => {
 
     cartItem.quantity = quantity;
     await user.save();
+    await user.populate("cart.productId");
 
-    // Return updated cart
-    const updatedUser = await User.findById(req.user.userId).populate("cart.productId");
-    const cartItems = updatedUser.cart
+    const cartItems = user.cart
       .filter((item) => item.productId && item.productId.isActive)
       .map((item) => ({
-        product: {
-          ...item.productId._doc,
-          finalPrice: calculateDiscountedPrice(item.productId),
-        },
+        product: { ...item.productId._doc, finalPrice: calculateDiscountedPrice(item.productId) },
         quantity: item.quantity,
       }));
 
@@ -153,16 +145,12 @@ exports.removeFromCart = async (req, res) => {
     );
 
     await user.save();
+    await user.populate("cart.productId");
 
-    // Return updated cart
-    const updatedUser = await User.findById(req.user.userId).populate("cart.productId");
-    const cartItems = updatedUser.cart
+    const cartItems = user.cart
       .filter((item) => item.productId && item.productId.isActive)
       .map((item) => ({
-        product: {
-          ...item.productId._doc,
-          finalPrice: calculateDiscountedPrice(item.productId),
-        },
+        product: { ...item.productId._doc, finalPrice: calculateDiscountedPrice(item.productId) },
         quantity: item.quantity,
       }));
 
@@ -220,7 +208,6 @@ exports.addToWishlist = async (req, res) => {
       return res.status(400).json({ message: "Product ID is required" });
     }
 
-    // Check if product exists
     const product = await Product.findById(productId);
     if (!product || !product.isActive) {
       return res.status(404).json({ message: "Product not found" });
@@ -228,22 +215,17 @@ exports.addToWishlist = async (req, res) => {
 
     const user = await User.findById(req.user.userId);
 
-    // Check if already in wishlist
     if (user.wishlist && user.wishlist.some(id => id && id.toString() === productId)) {
       return res.status(400).json({ message: "Already in wishlist" });
     }
 
     user.wishlist.push(productId);
     await user.save();
+    await user.populate("wishlist");
 
-    // Return updated wishlist
-    const updatedUser = await User.findById(req.user.userId).populate("wishlist");
-    const wishlistItems = updatedUser.wishlist
-      .filter((product) => product && product.isActive)
-      .map((product) => ({
-        ...product._doc,
-        finalPrice: calculateDiscountedPrice(product),
-      }));
+    const wishlistItems = user.wishlist
+      .filter((p) => p && p.isActive)
+      .map((p) => ({ ...p._doc, finalPrice: calculateDiscountedPrice(p) }));
 
     res.status(200).json({ message: "Added to wishlist", wishlist: wishlistItems });
   } catch (error) {
@@ -264,15 +246,11 @@ exports.removeFromWishlist = async (req, res) => {
     );
 
     await user.save();
+    await user.populate("wishlist");
 
-    // Return updated wishlist
-    const updatedUser = await User.findById(req.user.userId).populate("wishlist");
-    const wishlistItems = updatedUser.wishlist
-      .filter((product) => product && product.isActive)
-      .map((product) => ({
-        ...product._doc,
-        finalPrice: calculateDiscountedPrice(product),
-      }));
+    const wishlistItems = user.wishlist
+      .filter((p) => p && p.isActive)
+      .map((p) => ({ ...p._doc, finalPrice: calculateDiscountedPrice(p) }));
 
     res.status(200).json({ message: "Removed from wishlist", wishlist: wishlistItems });
   } catch (error) {

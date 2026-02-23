@@ -71,4 +71,8 @@ const productSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Indexes for faster queries
+productSchema.index({ isActive: 1, createdAt: -1 });  // getAllProducts
+productSchema.index({ category: 1, isActive: 1 });     // getProductsByCategory
+
 module.exports = mongoose.model("Product", productSchema);

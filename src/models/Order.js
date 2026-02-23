@@ -80,4 +80,9 @@ const orderSchema = new mongoose.Schema(
   }
 );
 
+// Index for getMyOrders (user query + date sort)
+orderSchema.index({ user: 1, createdAt: -1 });
+// Index for admin getAllOrders (date sort)
+orderSchema.index({ createdAt: -1 });
+
 module.exports = mongoose.model("Order", orderSchema);

@@ -5,11 +5,20 @@ const Product = require("../models/Product");
 const User = require("../models/User");
 const { sendOrderConfirmation, sendAdminNotification } = require("../services/emailService");
 
-// Initialize Razorpay
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
+// Lazy-initialize Razorpay so env vars are guaranteed to be loaded first
+let _razorpay = null;
+function getRazorpay() {
+  if (!_razorpay) {
+    if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+      throw new Error("Razorpay keys are not set in environment variables!");
+    }
+    _razorpay = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET,
+    });
+  }
+  return _razorpay;
+}
 
 // CREATE RAZORPAY ORDER
 exports.createRazorpayOrder = async (req, res) => {
@@ -61,9 +70,13 @@ exports.createRazorpayOrder = async (req, res) => {
 
     totalAmount = Math.round(totalAmount);
 
+    // Apply shipping cost (matches frontend: free above ₹500, else ₹50)
+    const shippingCost = totalAmount >= 500 ? 0 : 50;
+    const finalAmount = totalAmount + shippingCost;
+
     // Create Razorpay order
-    const razorpayOrder = await razorpay.orders.create({
-      amount: totalAmount * 100, // Razorpay expects amount in paise
+    const razorpayOrder = await getRazorpay().orders.create({
+      amount: finalAmount * 100, // Razorpay expects amount in paise
       currency: "INR",
       receipt: `receipt_${Date.now()}`,
       notes: {
@@ -79,7 +92,9 @@ exports.createRazorpayOrder = async (req, res) => {
       success: true,
       order: razorpayOrder,
       key: process.env.RAZORPAY_KEY_ID,
-      amount: totalAmount,
+      amount: finalAmount,
+      subtotal: totalAmount,
+      shippingCost,
       prefill: {
         name: user?.name || "",
         email: user?.email || "",
