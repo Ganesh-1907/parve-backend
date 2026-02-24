@@ -25,7 +25,7 @@ const productSchema = new mongoose.Schema(
 
     category: {
       type: String,
-      enum: ["facewash", "serums", "creams"],
+      enum: ["facewash", "serums", "creams", "moisturizer", "night-cream"],
       required: true,
     },
 
