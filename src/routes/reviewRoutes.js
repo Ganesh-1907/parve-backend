@@ -4,6 +4,7 @@ const {
   addReview,
   getPublicReviews,
   getAdminReviews,
+  getReviewById,
   updateReviewStatus,
 } = require("../controllers/reviewController");
 const { protect, adminOnly } = require("../middlewares/authMiddleware");
@@ -17,6 +18,7 @@ router.post("/add", protect, uploadReviewImages, addReview);
 
 // Admin routes
 router.get("/admin", protect, adminOnly, getAdminReviews);
+router.get("/:id", protect, adminOnly, getReviewById);
 router.put("/status/:id", protect, adminOnly, updateReviewStatus);
 
 module.exports = router;

@@ -97,3 +97,23 @@ exports.updateReviewStatus = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+/* ================= GET REVIEW BY ID (ADMIN) ================= */
+exports.getReviewById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const review = await Review.findById(id);
+
+    if (!review) {
+      return res.status(404).json({ message: "Review not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      review,
+    });
+  } catch (error) {
+    console.error("Get review by id error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
