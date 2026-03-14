@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
+const User = require("../models/User");
 
-exports.protect = (req, res, next) => {
+exports.protect = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
@@ -12,7 +13,14 @@ exports.protect = (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    req.user = decoded; // { userId, role }
+    const user = await User.findById(decoded.userId).select("-password");
+    if (!user) {
+      return res.status(401).json({ message: "User not found" });
+    }
+
+    // Modern req.user with backward compatibility
+    req.user = user;
+    req.user.userId = decoded.userId; // Keeps getCart, getWishlist etc working
 
     next();
   } catch (error) {

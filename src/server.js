@@ -38,6 +38,7 @@ app.use("/api/orders", require("./routes/orderRoutes"));
 app.use("/api/users", require("./routes/userRoutes"));
 app.use("/api/payment", require("./routes/paymentRoutes"));
 app.use("/api/admin", require("./routes/adminRoutes"));
+app.use("/api/reviews", require("./routes/reviewRoutes"));
 
 app.get("/", (req, res) => {
   res.send("Server running & DB connected 🚀");

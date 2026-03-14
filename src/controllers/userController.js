@@ -26,11 +26,7 @@ const calculateDiscountedPrice = (product) => {
 /* ================= GET CART ================= */
 exports.getCart = async (req, res) => {
   try {
-    const user = await User.findById(req.user.userId).populate("cart.productId");
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    const user = await req.user.populate("cart.productId");
 
     // Filter out invalid products and add finalPrice
     const cartItems = user.cart
@@ -65,7 +61,7 @@ exports.addToCart = async (req, res) => {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    const user = await User.findById(req.user.userId);
+    const user = req.user;
 
     const existingItem = user.cart.find(
       (item) => item.productId.toString() === productId
@@ -105,7 +101,7 @@ exports.updateCartItem = async (req, res) => {
       return res.status(400).json({ message: "Valid quantity is required" });
     }
 
-    const user = await User.findById(req.user.userId);
+    const user = req.user;
 
     const cartItem = user.cart.find(
       (item) => item.productId.toString() === productId
@@ -138,7 +134,7 @@ exports.removeFromCart = async (req, res) => {
   try {
     const { productId } = req.params;
 
-    const user = await User.findById(req.user.userId);
+    const user = req.user;
 
     user.cart = user.cart.filter(
       (item) => item.productId.toString() !== productId
@@ -164,7 +160,7 @@ exports.removeFromCart = async (req, res) => {
 /* ================= CLEAR CART ================= */
 exports.clearCart = async (req, res) => {
   try {
-    const user = await User.findById(req.user.userId);
+    const user = req.user;
     user.cart = [];
     await user.save();
 
@@ -178,11 +174,7 @@ exports.clearCart = async (req, res) => {
 /* ================= GET WISHLIST ================= */
 exports.getWishlist = async (req, res) => {
   try {
-    const user = await User.findById(req.user.userId).populate("wishlist");
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    const user = await req.user.populate("wishlist");
 
     // Filter active products and add finalPrice
     const wishlistItems = user.wishlist
@@ -213,7 +205,7 @@ exports.addToWishlist = async (req, res) => {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    const user = await User.findById(req.user.userId);
+    const user = req.user;
 
     if (user.wishlist && user.wishlist.some(id => id && id.toString() === productId)) {
       return res.status(400).json({ message: "Already in wishlist" });
@@ -239,7 +231,7 @@ exports.removeFromWishlist = async (req, res) => {
   try {
     const { productId } = req.params;
 
-    const user = await User.findById(req.user.userId);
+    const user = req.user;
 
     user.wishlist = user.wishlist.filter(
       (id) => id.toString() !== productId
@@ -263,13 +255,7 @@ exports.removeFromWishlist = async (req, res) => {
 exports.updateProfile = async (req, res) => {
   try {
     const { name, phone, address } = req.body;
-    const userId = req.user.userId;
-
-    const user = await User.findById(userId);
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    const user = req.user;
 
     if (name) user.name = name;
     if (phone) user.phone = phone;
