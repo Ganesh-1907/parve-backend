@@ -74,6 +74,21 @@ const orderSchema = new mongoose.Schema(
     razorpayPaymentId: {
       type: String,
     },
+
+    paymentConfirmedAt: {
+      type: Date,
+      default: null,
+    },
+
+    customerEmailSentAt: {
+      type: Date,
+      default: null,
+    },
+
+    adminNotificationSentAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,
@@ -84,5 +99,19 @@ const orderSchema = new mongoose.Schema(
 orderSchema.index({ user: 1, createdAt: -1 });
 // Index for admin getAllOrders (date sort)
 orderSchema.index({ createdAt: -1 });
+orderSchema.index(
+  { razorpayOrderId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { razorpayOrderId: { $type: "string" } },
+  }
+);
+orderSchema.index(
+  { razorpayPaymentId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { razorpayPaymentId: { $type: "string" } },
+  }
+);
 
 module.exports = mongoose.model("Order", orderSchema);

@@ -104,8 +104,10 @@ const sendOrderConfirmation = async (order, user) => {
       html: emailHtml,
     });
     console.log(`✅ Order confirmation email sent to ${user.email}`);
+    return true;
   } catch (error) {
     console.error("❌ Failed to send order confirmation email:", error.message);
+    return false;
   }
 };
 
@@ -168,8 +170,10 @@ const sendAdminNotification = async (order, user) => {
       html: emailHtml,
     });
     console.log(`✅ Admin notification sent to ${adminEmail}`);
+    return true;
   } catch (error) {
     console.error("❌ Failed to send admin notification:", error.message);
+    return false;
   }
 };
 

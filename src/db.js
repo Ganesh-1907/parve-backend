@@ -1,4 +1,35 @@
 const mongoose = require("mongoose");
+const PaymentTransaction = require("./models/PaymentTransaction");
+const Order = require("./models/Order");
+
+const repairPaymentIndexes = async () => {
+  // Older documents may have stored null in these fields, which clashes with unique indexes.
+  await Promise.all([
+    PaymentTransaction.updateMany(
+      { razorpayPaymentId: null },
+      { $unset: { razorpayPaymentId: "" } },
+      { strict: false }
+    ),
+    PaymentTransaction.updateMany(
+      { razorpayOrderId: null },
+      { $unset: { razorpayOrderId: "" } },
+      { strict: false }
+    ),
+    Order.updateMany(
+      { razorpayPaymentId: null },
+      { $unset: { razorpayPaymentId: "" } },
+      { strict: false }
+    ),
+    Order.updateMany(
+      { razorpayOrderId: null },
+      { $unset: { razorpayOrderId: "" } },
+      { strict: false }
+    ),
+  ]);
+
+  await Promise.all([PaymentTransaction.syncIndexes(), Order.syncIndexes()]);
+  console.log("✅ Payment indexes repaired");
+};
 
 const connectDB = async () => {
   try {
@@ -10,6 +41,7 @@ const connectDB = async () => {
       heartbeatFrequencyMS: 10000,    // check server health every 10s
     });
     console.log("✅ MongoDB connected");
+    await repairPaymentIndexes();
   } catch (error) {
     console.error("❌ MongoDB connection failed");
     console.error(error.message);
