@@ -30,6 +30,7 @@ exports.addProduct = async (req, res) => {
     const {
       productName,
       description,
+      offerTag,
       price,
       stock,
       category,
@@ -58,7 +59,8 @@ exports.addProduct = async (req, res) => {
       (file) => `/uploads/products/${file.filename}`
     );
 
-    const product = await Product.create({
+    const normalizedOfferTag = offerTag?.trim();
+    const productData = {
       productName,
       description,
       price,
@@ -72,7 +74,13 @@ exports.addProduct = async (req, res) => {
         endDate: isYearlyDiscount === "true" ? null : discountEndDate || null,
         isYearly: isYearlyDiscount === "true",
       },
-    });
+    };
+
+    if (normalizedOfferTag) {
+      productData.offerTag = normalizedOfferTag;
+    }
+
+    const product = await Product.create(productData);
 
     res.status(201).json({
       message: "Product added successfully",
@@ -133,6 +141,7 @@ exports.updateProduct = async (req, res) => {
     const {
       productName,
       description,
+      offerTag,
       price,
       stock,
       category,
@@ -143,7 +152,7 @@ exports.updateProduct = async (req, res) => {
       isYearlyDiscount,
     } = req.body;
 
-    // Build update object
+    const normalizedOfferTag = offerTag?.trim();
     const updateData = {
       productName,
       description,
@@ -159,6 +168,10 @@ exports.updateProduct = async (req, res) => {
       },
     };
 
+    if (normalizedOfferTag) {
+      updateData.offerTag = normalizedOfferTag;
+    }
+
     // If new images are uploaded, update them
     if (req.files && req.files.length > 0) {
       updateData.images = req.files.map(
@@ -166,7 +179,11 @@ exports.updateProduct = async (req, res) => {
       );
     }
 
-    const updatedProduct = await Product.findByIdAndUpdate(id, updateData, {
+    const updateOperation = normalizedOfferTag
+      ? { $set: updateData }
+      : { $set: updateData, $unset: { offerTag: 1 } };
+
+    const updatedProduct = await Product.findByIdAndUpdate(id, updateOperation, {
       new: true,
     });
 

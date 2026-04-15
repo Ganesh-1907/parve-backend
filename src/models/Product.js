@@ -13,6 +13,11 @@ const productSchema = new mongoose.Schema(
       required: true,
     },
 
+    offerTag: {
+      type: String,
+      trim: true,
+    },
+
     price: {
       type: Number,
       required: true,
