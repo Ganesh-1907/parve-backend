@@ -33,12 +33,7 @@ app.use(
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
 // DB
-connectDB();
-
-// Routes
-
 app.use("/uploads", express.static("uploads"));
-
 
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/products", require("./routes/productRoutes"));
@@ -53,6 +48,17 @@ app.get("/", (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-});
+
+const startServer = async () => {
+  try {
+    await connectDB();
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error("❌ Server startup aborted because MongoDB is unavailable");
+    process.exit(1);
+  }
+};
+
+startServer();
